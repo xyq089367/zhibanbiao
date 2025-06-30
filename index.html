@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>崇阳中波台值班表系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        body { background: #f5f7fa; color: #222; line-height: 1.6; padding: 8px; min-height: 100vh; }
+        .container { max-width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin: 10px auto; overflow: hidden; }
+        header { background: #1a2530; color: #fff; padding: 12px 6px; text-align: center; border-bottom: 2px solid #3498db; }
+        .logo { display: flex; flex-direction: column; align-items: center; gap: 6px; margin: 2px 0; }
+        .logo-icon { width: 38px; height: 38px; background: linear-gradient(135deg, #3498db, #1a5f9e); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 2px solid #fff; }
+        h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; }
+        .subtitle { font-size: 0.9rem; color: #b0bec5; margin-top: 2px; }
+        .controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; background: #f5f5f5; border-bottom: 1px solid #e0e0e0; justify-content: center; }
+        .month-selector { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; background: #fff; border-radius: 30px; padding: 2px 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); border: 1px solid #e0e0e0; }
+        .month-display { font-size: 1rem; font-weight: 700; color: #2c3e50; text-align: center; flex: 1; padding: 4px 0; letter-spacing: 1px; }
+        .nav-btn { width: 28px; height: 28px; border-radius: 50%; border: none; background: linear-gradient(135deg, #3498db, #2980b9); color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .nav-btn:disabled { background: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+        .print-btn { background: linear-gradient(135deg, #27ae60, #219653); color: #fff; border: none; border-radius: 30px; padding: 8px 18px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .table-container { width: 100%; overflow-x: auto; padding: 4px; position: relative; background: #fff; border-radius: 8px; margin: 4px 0; }
+        .schedule-table { width: 100%; min-width: 350px; border-collapse: separate; border-spacing: 0; font-size: 0.9rem; border-radius: 8px; overflow: hidden; }
+        .schedule-table th { background: #1a2530; color: #fff; font-weight: 600; padding: 8px 2px; text-align: center; }
+        .schedule-table td { padding: 7px 2px; text-align: center; border-bottom: 1px solid #e0e0e0; color: #333; }
+        .schedule-table tr:nth-child(even) { background-color: #f8f9fa; }
+        .schedule-table tr:nth-child(odd) { background-color: #fff; }
+        .schedule-table tr.today { background-color: #fffde7; font-weight: 600; }
+        .schedule-table tr.weekend { background-color: #f0f8ff; }
+        .date-cell { font-weight: 700; color: #333; font-size: 1rem; }
+        .weekend-cell { color: #e74c3c; font-weight: 600; }
+        .notes { padding: 10px 6px; background: #f5f5f5; border-top: 1px solid #e0e0e0; margin-top: 4px; }
+        .notes h2 { color: #2c3e50; font-size: 1.1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; padding-bottom: 4px; border-bottom: 1px solid #3498db; text-align: center; justify-content: center; }
+        .notes-content { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .note-card { flex: 1; min-width: 120px; max-width: 100%; background: #fff; border-radius: 8px; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border-left: 3px solid #3498db; }
+        .note-card h3 { color: #2c3e50; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; font-size: 0.95rem; }
+        .note-card ul { list-style-type: none; }
+        .note-card li { margin-bottom: 6px; padding-left: 18px; position: relative; font-size: 0.85rem; color: #444; }
+        .note-card li:before { content: "•"; position: absolute; left: 4px; color: #3498db; font-size: 1.1rem; top: -2px; }
+        footer { text-align: center; padding: 8px 4px; color: #888; font-size: 0.85rem; background: #f5f5f5; border-top: 1px solid #eee; }
+        @media (max-width: 576px) {
+            body { padding: 2px; }
+            .container { margin: 2px auto; border-radius: 8px; }
+            header { padding: 6px 2px; }
+            .logo { gap: 2px; margin: 1px 0; }
+            .logo-icon { width: 28px; height: 28px; font-size: 14px; }
+            h1 { font-size: 0.95rem; }
+            .subtitle { font-size: 0.75rem; }
+            .controls { gap: 2px; padding: 2px; }
+            .month-selector { padding: 1px 2px; gap: 2px; }
+            .month-display { font-size: 0.85rem; padding: 2px 0; }
+            .nav-btn { width: 22px; height: 22px; font-size: 0.85rem; }
+            .table-container { padding: 1px; border-radius: 4px; }
+            .schedule-table th, .schedule-table td { padding: 3px 1px; font-size: 0.75rem; }
+            .schedule-table { min-width: 250px; font-size: 0.75rem; }
+            .notes { padding: 4px 2px; margin-top: 1px; }
+            .notes h2 { font-size: 0.85rem; margin-bottom: 2px; padding-bottom: 2px; gap: 2px; }
+            .notes-content { gap: 2px; }
+            .note-card { min-width: 80px; padding: 2px; border-radius: 4px; }
+            .note-card h3 { font-size: 0.75rem; margin-bottom: 2px; gap: 2px; }
+            .note-card li { margin-bottom: 2px; padding-left: 10px; font-size: 0.7rem; }
+            .note-card li:before { left: 2px; font-size: 0.8rem; top: -1px; }
+            footer { padding: 2px 1px; font-size: 0.7rem; }
+        }
+        @media (max-width: 768px) { .print-btn { display: none; } }
+        @media (min-width: 992px) { .notes-content { flex-direction: row; flex-wrap: nowrap; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="logo">
+            <div class="logo-icon">📅</div>
+            <div>
+                <h1>崇阳中波台值班表系统</h1>
+                <div class="subtitle">2025年值班安排表</div>
+            </div>
+        </div>
+    </header>
+    <div class="controls">
+        <div class="month-selector">
+            <button class="nav-btn" id="prev-month" disabled>&lt;</button>
+            <div class="month-display" id="month-display">2025年6月</div>
+            <button class="nav-btn" id="next-month">&gt;</button>
+        </div>
+        <button class="print-btn" id="print-btn">🖨️ 打印值班表</button>
+    </div>
+    <div class="table-container">
+        <table class="schedule-table" id="schedule-table">
+            <thead>
+                <tr>
+                    <th width="12%">日期</th>
+                    <th width="12%">星期</th>
+                    <th width="22%">白班<br><span class="shift-time">(08:30-17:30)</span></th>
+                    <th width="32%">夜班<br><span class="shift-time">(17:30-次日08:30)</span></th>
+                    <th width="22%">抢维修带班</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-body">
+                <!-- 动态生成 -->
+            </tbody>
+        </table>
+    </div>
+    <div class="notes">
+        <h2>⚠️ 注意事项</h2>
+        <div class="notes-content">
+            <div class="note-card">
+                <h3>👥 值班规定</h3>
+                <ul>
+                    <li>业务人员每周二到台参加检修和业务学习</li>
+                    <li>按时进行面对面交接班，不得迟到早退</li>
+                    <li>值班期间不得擅离岗位，特殊情况需报备</li>
+                    <li>值班记录需详细填写，字迹工整清晰</li>
+                </ul>
+            </div>
+            <div class="note-card">
+                <h3>🛠️ 抢维修要求</h3>
+                <ul>
+                    <li>抢维修带班人必须保证24小时通信畅通</li>
+                    <li>抢维修人员包括当班值班人员</li>
+                    <li>故障响应时间不得超过30分钟</li>
+                    <li>维修完成后需填写维修报告并归档</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <footer>
+        崇阳中波台 © 2025 - 值班表管理系统 作者：余俊灼
+    </footer>
+</div>
+<script>
+// 值班人员数据
+const staff = {
+    dayShift: ["焦华保", "程维志", "黄子龙", "余俊灼", "龚成钢"],
+    nightMain: ["余俊灼", "龚成钢", "焦华保", "程维志", "黄子龙"],
+    nightAssist: ["黄子龙", "焦华保", "程维志", "胡民高", "余俊灼"],
+    emergencyLeader: "胡民高"
+};
+// 预先生成所有月份的值班数据
+const scheduleData = {};
+let dayShiftIndex = 0, nightMainIndex = 0, nightAssistIndex = 0;
+let currentMonth = 6;
+const currentYear = 2025;
+// 初始化
+function genSchedule() {
+    for (let month = 6; month <= 12; month++) {
+        const daysInMonth = new Date(2025, month, 0).getDate();
+        const monthData = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(2025, month - 1, day);
+            const dayOfWeek = date.getDay();
+            const weekdays = ["日", "一", "二", "三", "四", "五", "六"];
+            const dayShiftStaff = staff.dayShift[dayShiftIndex % staff.dayShift.length];
+            const mainNight = staff.nightMain[nightMainIndex % staff.nightMain.length];
+            const assistNight = staff.nightAssist[nightAssistIndex % staff.nightAssist.length];
+            monthData.push({
+                day: day,
+                weekday: weekdays[dayOfWeek],
+                isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+                dayShift: dayShiftStaff,
+                nightMain: mainNight,
+                nightAssist: assistNight,
+                emergency: staff.emergencyLeader
+            });
+            dayShiftIndex++;
+            nightMainIndex++;
+            nightAssistIndex++;
+        }
+        scheduleData[month] = monthData;
+    }
+}
+function renderSchedule(month) {
+    const scheduleBody = document.getElementById('schedule-body');
+    scheduleBody.innerHTML = '';
+    document.getElementById('month-display').textContent = `${currentYear}年${month}月`;
+    const monthData = scheduleData[month];
+    const today = new Date();
+    monthData.forEach(dayData => {
+        const row = document.createElement('tr');
+        if (dayData.isWeekend) row.classList.add('weekend');
+        if (currentYear === today.getFullYear() && month === today.getMonth() + 1 && dayData.day === today.getDate()) row.classList.add('today');
+        row.innerHTML = `
+            <td class="date-cell">${dayData.day}</td>
+            <td class="${dayData.isWeekend ? 'weekend-cell' : ''}">${dayData.weekday}</td>
+            <td>${dayData.dayShift}</td>
+            <td>${dayData.nightMain}<br>${dayData.nightAssist}</td>
+            <td>${dayData.emergency}</td>
+        `;
+        scheduleBody.appendChild(row);
+    });
+}
+function updateNavButtons() {
+    document.getElementById('prev-month').disabled = (currentMonth === 6);
+    document.getElementById('next-month').disabled = (currentMonth === 12);
+}
+document.addEventListener('DOMContentLoaded', function() {
+    genSchedule();
+    renderSchedule(currentMonth);
+    document.getElementById('prev-month').addEventListener('click', function() {
+        if (currentMonth > 6) { currentMonth--; renderSchedule(currentMonth); updateNavButtons(); }
+    });
+    document.getElementById('next-month').addEventListener('click', function() {
+        if (currentMonth < 12) { currentMonth++; renderSchedule(currentMonth); updateNavButtons(); }
+    });
+    document.getElementById('print-btn').addEventListener('click', function() {
+        const daysInMonth = scheduleData[currentMonth].length;
+        let fontPt = 9;
+        if (daysInMonth >= 31) fontPt = 7.2;
+        else if (daysInMonth >= 30) fontPt = 7.6;
+        else if (daysInMonth >= 29) fontPt = 8.2;
+        else if (daysInMonth >= 28) fontPt = 8.6;
+        const printContent = `<!DOCTYPE html><html><head><meta charset='UTF-8'><title>崇阳中波台值班表打印</title><style>
+            @page { size: A4 portrait; margin: 0.3cm; }
+            body { font-family: 'Microsoft YaHei', sans-serif; margin: 0; padding: 0; background: #fff; }
+            .print-title { text-align: center; font-size: 13pt; font-weight: bold; margin: 2px 0 2px 0; color: #000; }
+            .print-date { text-align: center; font-size: 10pt; margin-bottom: 2px; color: #222; }
+            table { width: 100% !important; min-width: unset !important; border-collapse: collapse; font-size: ${fontPt}pt !important; table-layout: fixed; page-break-inside: avoid; }
+            th, td { border: 1px solid #888; padding: 1px 0; text-align: center; color: #000; word-break: break-all; white-space: pre-line; }
+            th { background: #333 !important; color: #fff !important; font-size: ${fontPt}pt !important; -webkit-print-color-adjust: exact; color-adjust: exact; padding: 1px 0 !important; }
+            tr, thead, tbody { page-break-inside: avoid !important; page-break-after: auto !important; }
+            tr.today { background-color: #fffde7 !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
+            tr.weekend { background-color: #f0f8ff !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
+        </style></head><body>
+        <div class='print-title'>崇阳中波台值班表</div>
+        <div class='print-date'>${currentYear}年${currentMonth}月</div>
+        <table><thead><tr>
+            <th width='12%'>日期</th>
+            <th width='12%'>星期</th>
+            <th width='22%'>白班<br>(08:30-17:30)</th>
+            <th width='32%'>夜班<br>(17:30-次日08:30)</th>
+            <th width='22%'>抢维修带班</th>
+        </tr></thead><tbody>
+        ${getPrintTableContent()}
+        </tbody></table></body></html>`;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    });
+    updateNavButtons();
+});
+function getPrintTableContent() {
+    const monthData = scheduleData[currentMonth];
+    const today = new Date();
+    let tableContent = '';
+    monthData.forEach(dayData => {
+        const isToday = (currentYear === today.getFullYear() && currentMonth === today.getMonth() + 1 && dayData.day === today.getDate());
+        const rowClass = [];
+        if (dayData.isWeekend) rowClass.push('weekend');
+        if (isToday) rowClass.push('today');
+        tableContent += `<tr class='${rowClass.join(' ')}'>
+            <td>${dayData.day}</td>
+            <td>${dayData.weekday}</td>
+            <td>${dayData.dayShift}</td>
+            <td>${dayData.nightMain}<br>${dayData.nightAssist}</td>
+            <td>${dayData.emergency}</td>
+        </tr>`;
+    });
+    return tableContent;
+}
+</script>
+</body>
+</html> 
